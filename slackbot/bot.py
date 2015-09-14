@@ -6,7 +6,7 @@ import importlib
 import logging
 import os
 import re
-import thread
+import threading
 import time
 
 from slackbot import settings
@@ -31,7 +31,9 @@ class Bot(object):
         self._plugins.init_plugins()
         self._dispatcher.start()
         self._client.rtm_connect()
-        thread.start_new_thread(self._keepactive, tuple())
+        my_thread = threading.Thread(target=self._keepactive)
+        my_thread.setDaemon(True)
+        my_thread.start()
         logger.info('connected to slack RTM api')
         self._dispatcher.loop()
 

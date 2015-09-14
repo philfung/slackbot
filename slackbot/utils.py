@@ -3,8 +3,8 @@
 import os
 import logging
 import tempfile
-import thread
-import Queue
+import threading
+import queue
 import requests
 from contextlib import contextmanager
 
@@ -36,8 +36,6 @@ def to_utf8(s):
     """
     if isinstance(s, str):
         return s
-    elif isinstance(s, unicode):
-        return s.encode('utf-8')
     elif isinstance(s, (list, tuple, set)):
         return [to_utf8(v) for v in s]
     else:
@@ -60,11 +58,13 @@ class WorkerPool(object):
     def __init__(self, func, nworker=10):
         self.nworker = nworker
         self.func = func
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
 
     def start(self):
-        for _ in xrange(self.nworker):
-            thread.start_new_thread(self.do_work, tuple())
+        for _ in range(self.nworker):
+             my_thread = threading.Thread(target=self.do_work)
+             my_thread.setDaemon(True)
+             my_thread.start()
 
     def add_task(self, msg):
         self.queue.put(msg)
